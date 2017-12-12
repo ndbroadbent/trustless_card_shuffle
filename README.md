@@ -1,30 +1,28 @@
 # Trustless Card Shuffle
 
 I was reading the Wikipedia page for [Mental Poker](https://en.wikipedia.org/wiki/Mental_poker).
-The shuffling algorithm mentioned on that page requires commutative encryption,
-so I wanted to see if I could figure out a different algorithm that was secure and potentially faster.
+The shuffling algorithm mentioned on that page requires a commutative encryption algorithm,
+which can be quite slow.
 
-My algorithm uses public-key cryptography and XOR operations with random data.
-The asymmetric encryption step with RSA prevents the known-plaintext attack
-that would be possible if you only use XOR operations.
+My proposed algorithm is very simple. The players commit to random numbers,
+and publish SHA-256 digests so that they cannot change these numbers.
+When a player knows both random numbers, they can perform a deterministic calculation
+to find the next card in the sequence.
+If both players share their random numbers with each other,
+they both discover the value of the next card. Cards can be revealed in any order,
+to any party.
 
-I'm not a cryptography expert, so it is very likely that this protocol has some security flaws.
-
-You can view the code in [poc.rb](./poc.rb).
+As long as one party provides a completely random number, the other party cannot
+affect the outcome of the deterministic calculation without bruteforcing SHA-256.
+Even if they successfully calculate all the possible SHA-256 hashes for all possible
+256-bit numbers, they are likely to only find a single collision. And then they have
+to find a corresponding collision for the card that they would like to swap.
+The chance of a single SHA-256 collision is vanishingly small.
+The chance of two matching SHA-256 collisions in a shuffled deck of 52 cards is incomprehensibly small,
+even if someone was using a quantum computer.
 
 
 ### Notes
 
-This algorithm doesn't provide any guarantees that the shuffled deck will be valid. The parties
-just have to assume that the original set of cards were valid, and didn't contain any duplicates.
-The party who performs the final shuffle could also replace any card in the deck with random data,
-and the other party would have no idea until the game reaches that point.
-
-The [Toolbox for Mental Card Games and its Implementation](http://www.nongnu.org/libtmcg/libTMCG.pdf) paper
-uses zero-knowledge proofs to solve these problems.
-
-My next challenge is to figure out how to implement my own zero-knowledge proofs.
-I might be able to use [this technique](https://crypto.stackexchange.com/a/16039/53925)
-to provide a zero-knowledge proof that the first party used the RSA public key to
-sign each card in the deck once (or something like that).
-But I don't know how the proof would work with the one-time pad.
+This shuffling algorithm only solves a very specific problem, and does not implement anything
+else that would be required for Mental Poker.
